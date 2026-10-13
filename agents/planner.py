@@ -51,7 +51,19 @@ def decide(state: GraphState, trace_writer: Optional[TraceWriter] = None) -> str
     if state.status in ("accepted", "partial", "failed"):
         return "finish" if state.status == "accepted" else "escalate"
 
-    # ---- 2. Proof-rejection re-route (last_rejected_agent on state) --------
+    # ---- 2. Iteration-limit guard ------------------------------------------
+    try:
+        check_limits(state, trace_writer=trace_writer)
+    except LimitExceeded as exc:
+        if trace_writer:
+            trace_writer.write(
+                "planner",
+                "escalate",
+                {"reason": str(exc)},
+            )
+        return "escalate"
+
+    # ---- 3. Proof-rejection re-route (last_rejected_agent on state) --------
     last_rejected = (state.iteration_counters or {}).get("_last_rejected_agent")
     if last_rejected:
         if trace_writer:
@@ -64,18 +76,6 @@ def decide(state: GraphState, trace_writer: Optional[TraceWriter] = None) -> str
                 },
             )
         return last_rejected
-
-    # ---- 3. Iteration-limit guard ------------------------------------------
-    try:
-        check_limits(state, trace_writer=trace_writer)
-    except LimitExceeded as exc:
-        if trace_writer:
-            trace_writer.write(
-                "planner",
-                "escalate",
-                {"reason": str(exc)},
-            )
-        return "escalate"
 
     # ---- 4. LLM-driven decision --------------------------------------------
     prompt = _build_decision_prompt(state)
@@ -129,6 +129,9 @@ def run_planner(
     # ---- Validate latest proof from state.proofs --------------------------
     if state.proofs:
         latest_proof = state.proofs[-1]
+        counters = dict(state.iteration_counters)
+        if latest_proof.task_id:
+            counters[latest_proof.task_id] = counters.get(latest_proof.task_id, 0) + 1
         valid, errors = validate_proof(latest_proof)
         if not valid:
             # Mark rejection and add unresolved if it keeps failing
@@ -139,18 +142,15 @@ def run_planner(
                     {"agent": str(latest_proof.agent), "errors": errors},
                 )
             # Record which agent we must re-route to
-            counters = dict(state.iteration_counters)
             rejected_agent = str(latest_proof.agent.value if hasattr(latest_proof.agent, "value") else latest_proof.agent)
             counters["_last_rejected_agent"] = rejected_agent
             updates["iteration_counters"] = counters
             state = state.model_copy(update={"iteration_counters": counters})
         else:
             # Clear any lingering rejection flag
-            if "_last_rejected_agent" in state.iteration_counters:
-                counters = dict(state.iteration_counters)
-                counters.pop("_last_rejected_agent", None)
-                updates["iteration_counters"] = counters
-                state = state.model_copy(update={"iteration_counters": counters})
+            counters.pop("_last_rejected_agent", None)
+            updates["iteration_counters"] = counters
+            state = state.model_copy(update={"iteration_counters": counters})
             if trace_writer:
                 trace_writer.write(
                     "planner",
@@ -168,6 +168,8 @@ def run_planner(
     next_agent = decide(state, trace_writer=trace_writer)
 
     # Store decision for conditional edge to read
+    counters = dict(state.iteration_counters)
+    counters.pop("_last_rejected_agent", None)
     counters["_next_agent"] = next_agent
     updates["iteration_counters"] = counters
 
@@ -178,6 +180,17 @@ def run_planner(
             trace_writer.write("planner", "run_accepted", {})
     elif next_agent == "escalate":
         updates["status"] = "partial"
+        if not state.unresolved:
+            state.unresolved.append(
+                UnresolvedIssue(
+                    issue="Escalation triggered by planner",
+                    evidence="planner",
+                    agent="planner",
+                )
+            )
+        updates["unresolved"] = list(state.unresolved)
+    elif state.unresolved:
+        updates["unresolved"] = list(state.unresolved)
 
     return updates
 

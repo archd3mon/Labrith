@@ -39,7 +39,7 @@ def check_limits(
     state: GraphState,
     *,
     max_task_iterations: Optional[int] = None,
-    max_run_iterations: int = DEFAULT_MAX_RUN_ITERATIONS,
+    max_run_iterations: Optional[int] = None,
     trace_writer: Optional[TraceWriter] = None,
 ) -> None:
     """Check iteration limits and raise LimitExceeded if any are hit.
@@ -61,12 +61,17 @@ def check_limits(
         if max_task_iterations is not None
         else (state.request.max_iterations if state.request else DEFAULT_MAX_TASK_ITERATIONS)
     )
+    run_limit = (
+        max_run_iterations
+        if max_run_iterations is not None
+        else DEFAULT_MAX_RUN_ITERATIONS
+    )
 
     # ---- Run-total limit --------------------------------------------------
     run_total = state.iteration_counters.get("run_total", 0)
-    if run_total >= max_run_iterations:
+    if run_total >= run_limit:
         issue_text = (
-            f"Run iteration limit reached ({run_total} >= {max_run_iterations}). "
+            f"Run iteration limit reached ({run_total} >= {run_limit}). "
             "Stopping to avoid infinite loop."
         )
         _record_unresolved(state, issue_text, "planner", trace_writer)

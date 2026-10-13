@@ -46,20 +46,23 @@ def _make_planner_node(
     trace_writer: Optional[TraceWriter],
 ) -> Callable[[GraphState], dict]:
     def node(state: GraphState) -> dict:
-        return run_planner(state, trace_writer=trace_writer)
+        import agents.planner as planner_mod
+        return planner_mod.run_planner(state, trace_writer=trace_writer)
     node.__name__ = "planner"
     return node
 
 
 def _make_worker_node(
-    fn: Callable,
+    agent_name: str,
     trace_writer: Optional[TraceWriter],
     artifact_dir: Path,
     extra_kwargs: dict[str, Any],
 ) -> Callable[[GraphState], dict]:
     def node(state: GraphState) -> dict:
+        mod = __import__(f"agents.{agent_name}", fromlist=[f"run_{agent_name}"])
+        fn = getattr(mod, f"run_{agent_name}")
         return fn(state, trace_writer=trace_writer, artifact_dir=artifact_dir, **extra_kwargs)
-    node.__name__ = fn.__name__
+    node.__name__ = f"run_{agent_name}"
     return node
 
 
@@ -92,18 +95,12 @@ def create_graph(
     builder.add_node("planner", _make_planner_node(trace_writer))
 
     # ---- Worker nodes -------------------------------------------------------
-    worker_fns = {
-        "designer": run_designer,
-        "engineer": run_engineer,
-        "integration": run_integration,
-        "qa": run_qa,
-        "critic": run_critic,
-    }
-    for name, fn in worker_fns.items():
+    worker_names = ["designer", "engineer", "integration", "qa", "critic"]
+    for name in worker_names:
         extra = overrides.get(name, {})
         builder.add_node(
             name,
-            _make_worker_node(fn, trace_writer, artifact_dir, extra),
+            _make_worker_node(name, trace_writer, artifact_dir, extra),
         )
 
     # ---- Edges --------------------------------------------------------------
@@ -126,7 +123,7 @@ def create_graph(
     )
 
     # Every worker -> planner (supervisor pattern; workers never call each other)
-    for name in worker_fns:
+    for name in worker_names:
         builder.add_edge(name, "planner")
 
     return builder.compile()
