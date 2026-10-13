@@ -1,0 +1,71 @@
+[
+  {
+    "task_id": "T-01",
+    "description": "Design tokens, color system (slate/indigo), and component inventory for tickets dashboard",
+    "assigned_agent": "designer",
+    "status": "pending",
+    "depends_on": [],
+    "required_flows": []
+  },
+  {
+    "task_id": "T-02A",
+    "description": "Implement pure presentation TicketRow and TicketTable components with Tailwind",
+    "assigned_agent": "engineer",
+    "status": "pending",
+    "depends_on": [
+      "T-01"
+    ],
+    "required_flows": [
+      "list tickets",
+      "filter by priority"
+    ]
+  },
+  {
+    "task_id": "T-02B",
+    "description": "Implement filtered state management and reply form event dispatchers",
+    "assigned_agent": "engineer",
+    "status": "pending",
+    "depends_on": [
+      "T-02A"
+    ],
+    "required_flows": [
+      "list tickets",
+      "filter by priority"
+    ]
+  },
+  {
+    "task_id": "T-03",
+    "description": "Generate typed OpenAPI client for /api/tickets and /api/tickets/{id}/reply",
+    "assigned_agent": "integration",
+    "status": "pending",
+    "depends_on": [
+      "T-02"
+    ],
+    "required_flows": []
+  },
+  {
+    "task_id": "T-04",
+    "description": "Run Playwright headless browser tests for all 4 required support flows",
+    "assigned_agent": "qa",
+    "status": "pending",
+    "depends_on": [
+      "T-03"
+    ],
+    "required_flows": [
+      "list tickets",
+      "filter by priority",
+      "open ticket detail",
+      "send reply"
+    ]
+  },
+  {
+    "task_id": "T-05",
+    "description": "Audit WCAG 2.1 AA accessibility contrast, keyboard navigation, and Lighthouse metrics",
+    "assigned_agent": "critic",
+    "status": "pending",
+    "depends_on": [
+      "T-04"
+    ],
+    "required_flows": []
+  }
+]

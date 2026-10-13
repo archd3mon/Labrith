@@ -1,0 +1,135 @@
+{
+  "pages": [
+    {
+      "name": "TicketsDashboard",
+      "route": "/",
+      "description": "Main support dashboard displaying ticket queue with real-time filters and metrics.",
+      "components": [
+        "HeaderBar",
+        "TicketStatsBar",
+        "PriorityFilter",
+        "TicketTable",
+        "PaginationControls"
+      ]
+    },
+    {
+      "name": "TicketDetailView",
+      "route": "/tickets/:id",
+      "description": "Full conversation thread view with customer message history and agent reply editor.",
+      "components": [
+        "TicketHeader",
+        "CustomerMetaCard",
+        "ConversationThread",
+        "ReplyRichEditor",
+        "StatusBar"
+      ]
+    }
+  ],
+  "user_flows": [
+    {
+      "flow_id": "F-01",
+      "name": "list tickets",
+      "description": "Agent views open tickets ordered by urgency with status indicators.",
+      "steps": [
+        "Navigate to '/'",
+        "Verify ticket rows render with titles and badges"
+      ]
+    },
+    {
+      "flow_id": "F-02",
+      "name": "filter by priority",
+      "description": "Agent filters ticket queue by urgent/high priority tags.",
+      "steps": [
+        "Click Priority dropdown",
+        "Select 'urgent'",
+        "Confirm table filters rows"
+      ]
+    },
+    {
+      "flow_id": "F-03",
+      "name": "open ticket detail",
+      "description": "Agent clicks a ticket row to open conversation thread and history.",
+      "steps": [
+        "Click row #T-101",
+        "Verify transition to '/tickets/T-101'",
+        "Verify thread history"
+      ]
+    },
+    {
+      "flow_id": "F-04",
+      "name": "send reply",
+      "description": "Agent types a reply and submits it to update thread.",
+      "steps": [
+        "Focus reply editor",
+        "Type response",
+        "Click Send Reply",
+        "Verify message appended"
+      ]
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "T-01",
+      "description": "Design tokens, color system (slate/indigo), and component inventory for tickets dashboard",
+      "assigned_agent": "designer",
+      "status": "pending",
+      "depends_on": [],
+      "required_flows": []
+    },
+    {
+      "task_id": "T-02",
+      "description": "Implement React + TypeScript + Tailwind UI components for dashboard table and reply view",
+      "assigned_agent": "engineer",
+      "status": "pending",
+      "depends_on": [
+        "T-01"
+      ],
+      "required_flows": [
+        "list tickets",
+        "filter by priority"
+      ]
+    },
+    {
+      "task_id": "T-03",
+      "description": "Generate typed OpenAPI client for /api/tickets and /api/tickets/{id}/reply",
+      "assigned_agent": "integration",
+      "status": "pending",
+      "depends_on": [
+        "T-02"
+      ],
+      "required_flows": []
+    },
+    {
+      "task_id": "T-04",
+      "description": "Run Playwright headless browser tests for all 4 required support flows",
+      "assigned_agent": "qa",
+      "status": "pending",
+      "depends_on": [
+        "T-03"
+      ],
+      "required_flows": [
+        "list tickets",
+        "filter by priority",
+        "open ticket detail",
+        "send reply"
+      ]
+    },
+    {
+      "task_id": "T-05",
+      "description": "Audit WCAG 2.1 AA accessibility contrast, keyboard navigation, and Lighthouse metrics",
+      "assigned_agent": "critic",
+      "status": "pending",
+      "depends_on": [
+        "T-04"
+      ],
+      "required_flows": []
+    }
+  ],
+  "required_flows": [
+    "list tickets",
+    "filter by priority",
+    "open ticket detail",
+    "send reply"
+  ],
+  "reasoning": "Parsed OpenAPI endpoints (/api/tickets, /api/tickets/{id}, /api/tickets/{id}/reply) and brief. Structured into two responsive pages with 5 sequential cross-functional tasks mapped to QA flows."
+}
