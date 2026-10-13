@@ -33,6 +33,9 @@ class TaskDefinition(BaseModel):
     depends_on: list[str] = Field(
         default_factory=list, description="Task IDs this task depends on."
     )
+    required_flows: list[str] = Field(
+        default_factory=list, description="User flows associated with or tested by this task."
+    )
 
 
 class DesignSpec(BaseModel):
