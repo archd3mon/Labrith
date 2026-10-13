@@ -91,6 +91,20 @@ def make_scripted_llm(responses: list[str]):
                     }
                 ]
             })
+        if agent_name == "planner" and messages and "Analyze the product brief" in str(messages[-1].get("content", "")):
+            return json.dumps({
+                "pages": [{"name": "Dashboard", "route": "/", "description": "Main", "components": ["TicketList"]}],
+                "user_flows": [{"flow_id": "F-01", "name": "list tickets", "description": "view tickets", "steps": ["view"]}],
+                "tasks": [
+                    {"task_id": "T-01", "description": "Design UI", "assigned_agent": "designer", "status": "pending", "depends_on": []},
+                    {"task_id": "T-02", "description": "Build UI", "assigned_agent": "engineer", "status": "pending", "depends_on": ["T-01"]},
+                    {"task_id": "T-03", "description": "Integrate API", "assigned_agent": "integration", "status": "pending", "depends_on": ["T-02"]},
+                    {"task_id": "T-04", "description": "QA tests", "assigned_agent": "qa", "status": "pending", "depends_on": ["T-03"]},
+                    {"task_id": "T-05", "description": "Accessibility audit", "assigned_agent": "critic", "status": "pending", "depends_on": ["T-04"]},
+                ],
+                "required_flows": ["list tickets", "filter by priority"],
+                "reasoning": "Standard graph routing test plan",
+            })
         if queue:
             return queue.pop(0)
         return "finish"
