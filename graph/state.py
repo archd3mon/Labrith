@@ -38,6 +38,17 @@ class TaskDefinition(BaseModel):
     )
 
 
+class RevisionRecord(BaseModel):
+    """A single design revision addressing a Critic finding."""
+
+    finding: str = Field(..., min_length=1, description="Critic finding addressed.")
+    change: str = Field(..., min_length=1, description="Description of the change made.")
+    changed_tokens: dict[str, Any] = Field(
+        default_factory=dict, description="Tokens modified to resolve the finding."
+    )
+    rationale: str = Field(..., min_length=1, description="Why this change resolves the finding.")
+
+
 class DesignSpec(BaseModel):
     """Design tokens and layout produced by the Designer."""
 
@@ -51,6 +62,10 @@ class DesignSpec(BaseModel):
     )
     layout_notes: Optional[str] = Field(
         default=None, description="Free-form layout notes."
+    )
+    revisions: list[RevisionRecord] = Field(
+        default_factory=list,
+        description="Revision history recording resolved findings and rationales.",
     )
 
 

@@ -1,0 +1,50 @@
+{
+  "tokens": {
+    "colors": {
+      "primary": "#1E40AF",
+      "background": "#F9FAFB",
+      "surface": "#FFFFFF",
+      "text": "#94A3B8",
+      "text_muted": "#CBD5E1",
+      "border": "#E5E7EB",
+      "error": "#EF4444",
+      "success": "#10B981"
+    },
+    "spacing": {
+      "unit": "4px",
+      "xs": "4px",
+      "sm": "8px",
+      "md": "16px",
+      "lg": "24px",
+      "xl": "32px"
+    },
+    "type_scale": {
+      "font_family": "Inter, sans-serif",
+      "h1": "2rem",
+      "h2": "1.5rem",
+      "h3": "1.25rem",
+      "body": "1rem",
+      "small": "0.875rem"
+    },
+    "color_primary": "#1E40AF",
+    "color_background": "#F9FAFB",
+    "color_text": "#94A3B8",
+    "spacing_unit": "4px",
+    "font_family": "Inter, sans-serif"
+  },
+  "component_inventory": {
+    "TicketsDashboard": [
+      "TicketNavBar",
+      "TicketFilterBar",
+      "TicketDataTable",
+      "PriorityBadge"
+    ],
+    "TicketDetail": [
+      "TicketThreadView",
+      "StatusSelector",
+      "TicketReplyForm"
+    ]
+  },
+  "layout_notes": "Two-column responsive layout: collapsible sidebar with persistent ticket queue and fluid detail canvas.",
+  "revisions": []
+}
