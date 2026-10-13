@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labrith.example.com/schemas/input.schema.json",
+  "title": "Labrith Input Request",
+  "description": "Describes what to build and where the backend lives. See Design Doc Section 8.",
+  "type": "object",
+  "required": ["brief", "api_spec_url", "target"],
+  "properties": {
+    "brief": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Plain-language description of the product and its users."
+    },
+    "api_spec_url": {
+      "description": "The backend's API description: a URL string pointing to an OpenAPI 3 spec, or an inline OpenAPI 3 JSON object.",
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "uri",
+          "minLength": 1
+        },
+        {
+          "type": "object",
+          "description": "Inline OpenAPI 3 JSON object."
+        }
+      ]
+    },
+    "target": {
+      "type": "string",
+      "enum": ["dashboard", "form_app", "mixed"],
+      "description": "Kind of interface to build."
+    },
+    "style_hints": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Style hints, e.g. 'minimal', 'dark', 'data-dense'."
+    },
+    "required_flows": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "User flows that must pass QA; if absent the Planner derives them."
+    },
+    "max_iterations": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 3,
+      "description": "Iteration budget per task."
+    }
+  },
+  "additionalProperties": false
+}
