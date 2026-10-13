@@ -1,0 +1,25 @@
+{
+  "agent": "engineer",
+  "task_id": "T-02",
+  "claim": "React component and unit tests built cleanly and passed.",
+  "evidence": [
+    {
+      "type": "build_log",
+      "ref": "C:\\Users\\jayant\\Documents\\College\\Labrith\\artifacts\\evidence-run\\T-02_build.log"
+    },
+    {
+      "type": "test_result",
+      "ref": "C:\\Users\\jayant\\Documents\\College\\Labrith\\artifacts\\evidence-run\\T-02_test.log"
+    },
+    {
+      "type": "source_file",
+      "ref": "C:\\Users\\jayant\\Documents\\College\\Labrith\\runs\\evidence-run\\app\\src\\components\\TicketCard.tsx"
+    },
+    {
+      "type": "source_file",
+      "ref": "C:\\Users\\jayant\\Documents\\College\\Labrith\\runs\\evidence-run\\app\\src\\components\\TicketCard.test.tsx"
+    }
+  ],
+  "reasoning": "Component and tests built cleanly on attempt 2. npm run build and npm test exited with code 0.",
+  "timestamp": "2026-10-13T15:33:28.793058+00:00"
+}

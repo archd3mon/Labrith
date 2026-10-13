@@ -78,11 +78,25 @@ def make_scripted_llm(responses: list[str]):
     queue = list(responses)
 
     def handler(agent_name: str, messages: list[dict], **kwargs) -> str:
+        if agent_name == "engineer":
+            return json.dumps({
+                "files": [
+                    {
+                        "path": "src/components/TicketList.tsx",
+                        "content": "export function TicketList() { return <div>Tickets</div>; }\nexport default TicketList;\n",
+                    },
+                    {
+                        "path": "src/components/TicketList.test.tsx",
+                        "content": "import { describe, it, expect } from 'vitest';\ndescribe('TicketList', () => { it('works', () => { expect(true).toBe(true); }); });\n",
+                    }
+                ]
+            })
         if queue:
             return queue.pop(0)
         return "finish"
 
     return handler
+
 
 
 # ---------------------------------------------------------------------------

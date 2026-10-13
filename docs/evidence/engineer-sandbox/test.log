@@ -1,0 +1,15 @@
+
+> vite-react-ts-tailwind-template@0.0.0 test
+> vitest run
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/jayant/Documents/College/Labrith/runs/evidence-run/app[39m
+
+ [32mâœ“[39m src/App.test.tsx [2m([22m[2m1 test[22m[2m)[22m[90m 5[2mms[22m[39m
+ [32mâœ“[39m src/components/TicketCard.test.tsx [2m([22m[2m1 test[22m[2m)[22m[90m 6[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 21:03:27
+[2m   Duration [22m 1.41s[2m (transform 85ms, setup 0ms, collect 142ms, tests 11ms, environment 1ms, prepare 1.44s)[22m
+
