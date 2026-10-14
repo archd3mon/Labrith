@@ -100,14 +100,42 @@ class TestCompleteErrors:
             complete("hacker", [{"role": "user", "content": "hi"}])
 
     def test_no_provider_raises_not_implemented(self):
-        """Without a fake handler, the real provider raises NotImplementedError,
-        which after retries becomes LLMError."""
-        with pytest.raises(LLMError, match="failed after"):
-            complete(
-                "planner",
-                [{"role": "user", "content": "hi"}],
-                max_retries=1,
-            )
+        """Without a fake handler and without provider keys, the real provider raises
+        NotImplementedError, which after retries becomes LLMError."""
+        with mock.patch.dict(os.environ, {
+            "ANTHROPIC_API_KEY": "",
+            "OPENAI_API_KEY": "",
+            "GEMINI_API_KEY": "",
+            "GOOGLE_API_KEY": "",
+            "GROQ_API_KEY": "",
+        }, clear=False):
+            with pytest.raises(LLMError, match="failed after"):
+                complete(
+                    "planner",
+                    [{"role": "user", "content": "hi"}],
+                    max_retries=1,
+                )
+
+    def test_groq_provider_dispatch(self):
+        """Verify Groq API path formats request and extracts message content."""
+        fake_response = mock.MagicMock()
+        fake_response.status_code = 200
+        fake_response.json.return_value = {
+            "choices": [{"message": {"content": "groq reply"}}]
+        }
+
+        with mock.patch.dict(os.environ, {"GROQ_API_KEY": "gsk_test123"}, clear=False):
+            with mock.patch("httpx.post", return_value=fake_response) as mock_post:
+                result = complete(
+                    "planner",
+                    [{"role": "user", "content": "hello"}],
+                    model="qwen/qwen3.8-27b",
+                )
+                assert result == "groq reply"
+                assert mock_post.called
+                call_kwargs = mock_post.call_args.kwargs
+                assert "api.groq.com" in mock_post.call_args.args[0]
+                assert call_kwargs["json"]["model"] == "qwen/qwen3.8-27b"
 
 
 # ===========================================================================

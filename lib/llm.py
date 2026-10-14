@@ -106,7 +106,7 @@ def complete(
         LLMError: After all retries are exhausted.
         ValueError: For unknown agent names.
     """
-    model = get_model_for_agent(agent_name)
+    model = opts.pop("model", None) or get_model_for_agent(agent_name)
     timeout = timeout if timeout is not None else _DEFAULT_TIMEOUT
     max_retries = max_retries if max_retries is not None else _DEFAULT_MAX_RETRIES
 
@@ -143,7 +143,7 @@ def _call_provider(
 ) -> str:
     """Call the underlying LLM provider.
 
-    Supports Anthropic (Claude), OpenAI (GPT), and Google (Gemini) via HTTP requests.
+    Supports Anthropic (Claude), OpenAI (GPT), Google (Gemini), and Groq via HTTP requests.
     Raises NotImplementedError if no provider key is available in the environment.
     """
     import httpx
@@ -151,9 +151,10 @@ def _call_provider(
     anthropic_key = os.getenv("ANTHROPIC_API_KEY")
     openai_key = os.getenv("OPENAI_API_KEY")
     gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    groq_key = os.getenv("GROQ_API_KEY")
 
     # 1. Anthropic API
-    if anthropic_key and ("claude" in model.lower() or not (openai_key or gemini_key)):
+    if anthropic_key and ("claude" in model.lower() or not (openai_key or gemini_key or groq_key)):
         url = "https://api.anthropic.com/v1/messages"
         headers = {
             "x-api-key": anthropic_key,
@@ -187,8 +188,33 @@ def _call_provider(
             return str(content_blocks[0]["text"])
         return str(data)
 
-    # 2. OpenAI API
-    if openai_key and ("gpt" in model.lower() or "o1" in model.lower() or not gemini_key):
+    # 2. Groq API
+    if groq_key and (
+        "groq" in model.lower()
+        or "qwen" in model.lower()
+        or "llama" in model.lower()
+        or "gpt-oss" in model.lower()
+        or not (anthropic_key or openai_key or gemini_key)
+    ):
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {groq_key}",
+            "Content-Type": "application/json",
+        }
+        clean_model = model.removeprefix("groq/") if model.startswith("groq/") else model
+        if not clean_model or clean_model == "default" or "claude" in clean_model:
+            clean_model = "qwen/qwen3.8-27b"
+        payload = {
+            "model": clean_model,
+            "messages": messages,
+        }
+        response = httpx.post(url, headers=headers, json=payload, timeout=float(timeout))
+        response.raise_for_status()
+        data = response.json()
+        return str(data["choices"][0]["message"]["content"])
+
+    # 3. OpenAI API
+    if openai_key and ("gpt" in model.lower() or "o1" in model.lower() or not (gemini_key or groq_key)):
         url = "https://api.openai.com/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {openai_key}",
@@ -203,9 +229,12 @@ def _call_provider(
         data = response.json()
         return str(data["choices"][0]["message"]["content"])
 
-    # 3. Gemini API
+    # 4. Gemini API
     if gemini_key:
-        clean_model = model if "gemini" in model.lower() else "gemini-1.5-pro"
+        clean_model = model if "gemini" in model.lower() else "gemini-flash-lite-latest"
+        # Map retired/unavailable models to active latest versions
+        if clean_model in ("gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"):
+            clean_model = "gemini-flash-lite-latest"
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={gemini_key}"
         headers = {"Content-Type": "application/json"}
         contents = []
@@ -243,7 +272,7 @@ def _call_provider(
 
     raise NotImplementedError(
         f"No LLM provider configured for model '{model}'. "
-        "Set ANTHROPIC_API_KEY, OPENAI_API_KEY, or GEMINI_API_KEY in .env, "
+        "Set ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, or GROQ_API_KEY in .env, "
         "or set a fake handler for testing."
     )
 
