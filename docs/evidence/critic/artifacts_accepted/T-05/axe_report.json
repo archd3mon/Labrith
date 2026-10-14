@@ -1,0 +1,13 @@
+{
+  "url": "http://localhost:65033",
+  "violations": [],
+  "passes_count": 15,
+  "incomplete_count": 0,
+  "inapplicable_count": 73,
+  "critical_count": 0,
+  "serious_count": 0,
+  "moderate_count": 0,
+  "minor_count": 0,
+  "passed_gate": true,
+  "report_path": null
+}

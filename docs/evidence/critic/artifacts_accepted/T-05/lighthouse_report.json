@@ -1,0 +1,50 @@
+{
+  "url": "http://localhost:65033",
+  "scores": {
+    "accessibility": 100.0,
+    "performance": 98.0,
+    "best_practices": 98.0,
+    "seo": 100.0
+  },
+  "metrics": {
+    "fcp_ms": 200,
+    "load_time_ms": 18.799999982118607,
+    "dom_interactive_ms": 18.399999976158142,
+    "dom_elements": 11,
+    "images_total": 0,
+    "images_without_alt": 0,
+    "buttons_total": 0,
+    "buttons_without_text": 0,
+    "has_title": true,
+    "has_lang": true,
+    "has_viewport": true
+  },
+  "passed_gate": true,
+  "thresholds": {
+    "accessibility": 90.0,
+    "performance": 80.0
+  },
+  "audits": {
+    "first-contentful-paint": {
+      "score": 0.98,
+      "numericValue": 200.0
+    },
+    "load-time": {
+      "score": 0.98,
+      "numericValue": 18.799999982118607
+    },
+    "document-title": {
+      "score": 1.0
+    },
+    "html-has-lang": {
+      "score": 1.0
+    },
+    "viewport": {
+      "score": 1.0
+    },
+    "image-alt": {
+      "score": 1.0
+    }
+  },
+  "report_path": null
+}

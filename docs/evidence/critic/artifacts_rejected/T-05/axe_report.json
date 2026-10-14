@@ -1,0 +1,53 @@
+{
+  "url": "http://localhost:55010",
+  "violations": [
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensures the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "help_url": "https://dequeuniversity.com/rules/axe/4.9/color-contrast?application=axeAPI",
+      "tags": [
+        "cat.color",
+        "wcag2aa",
+        "wcag143",
+        "TTv5",
+        "TT13.c",
+        "EN-301-549",
+        "EN-9.1.4.3",
+        "ACT"
+      ],
+      "nodes": [
+        {
+          "target": [
+            "#ticket-desc"
+          ],
+          "html": "<p class=\"subtext\" id=\"ticket-desc\">Ticket #1042: Low priority agent assistance needed.</p>",
+          "failure_summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.45 (foreground color: #94a3b8, background color: #f9fafb, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1",
+          "failing_pair": {
+            "foreground": "#94a3b8",
+            "background": "#f9fafb",
+            "contrast_ratio": "2.45",
+            "expected_ratio": "4.5:1"
+          },
+          "data": {}
+        }
+      ],
+      "failing_pair": {
+        "foreground": "#94a3b8",
+        "background": "#f9fafb",
+        "contrast_ratio": "2.45",
+        "expected_ratio": "4.5:1"
+      }
+    }
+  ],
+  "passes_count": 15,
+  "incomplete_count": 0,
+  "inapplicable_count": 73,
+  "critical_count": 0,
+  "serious_count": 1,
+  "moderate_count": 0,
+  "minor_count": 0,
+  "passed_gate": false,
+  "report_path": null
+}

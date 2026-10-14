@@ -1,0 +1,80 @@
+{
+  "status": "rejected",
+  "gates": {
+    "accessibility": {
+      "passed": false,
+      "critical": 0,
+      "serious": 1
+    },
+    "quality": {
+      "passed": true,
+      "lighthouse_accessibility": 85.0,
+      "lighthouse_performance": 98.0
+    }
+  },
+  "axe_violations": [
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensures the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "help_url": "https://dequeuniversity.com/rules/axe/4.9/color-contrast?application=axeAPI",
+      "tags": [
+        "cat.color",
+        "wcag2aa",
+        "wcag143",
+        "TTv5",
+        "TT13.c",
+        "EN-301-549",
+        "EN-9.1.4.3",
+        "ACT"
+      ],
+      "nodes": [
+        {
+          "target": [
+            "#ticket-desc"
+          ],
+          "html": "<p class=\"subtext\" id=\"ticket-desc\">Ticket #1042: Low priority agent assistance needed.</p>",
+          "failure_summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.45 (foreground color: #94a3b8, background color: #f9fafb, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1",
+          "failing_pair": {
+            "foreground": "#94a3b8",
+            "background": "#f9fafb",
+            "contrast_ratio": "2.45",
+            "expected_ratio": "4.5:1"
+          },
+          "data": {}
+        }
+      ],
+      "failing_pair": {
+        "foreground": "#94a3b8",
+        "background": "#f9fafb",
+        "contrast_ratio": "2.45",
+        "expected_ratio": "4.5:1"
+      }
+    }
+  ],
+  "lighthouse_scores": {
+    "accessibility": 85.0,
+    "performance": 98.0,
+    "best_practices": 98.0,
+    "seo": 100.0
+  },
+  "revision_requests": [
+    {
+      "by": "critic",
+      "to": "designer",
+      "target_agent": "designer",
+      "reason": "Body text contrast below WCAG AA (#94a3b8 on #f9fafb, ratio: 2.45)",
+      "finding": "Color contrast between text (#94a3b8) and background (#f9fafb) is 2.45:1, failing WCAG AA (minimum 4.5:1).",
+      "evidence": "C:\\Users\\jayant\\Documents\\College\\Labrith\\docs\\evidence\\critic\\artifacts_rejected\\T-05\\axe_report.json",
+      "resolved": false,
+      "failing_pair": {
+        "foreground": "#94a3b8",
+        "background": "#f9fafb",
+        "contrast_ratio": "2.45",
+        "expected_ratio": "4.5:1"
+      }
+    }
+  ],
+  "accepted": false
+}

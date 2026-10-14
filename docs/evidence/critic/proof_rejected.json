@@ -1,0 +1,13 @@
+{
+  "agent": "critic",
+  "task_id": "T-05",
+  "claim": "Build rejected: 0 critical, 1 serious axe violation(s); 1 revision request(s) emitted.",
+  "evidence": [
+    {
+      "type": "audit_report",
+      "ref": "C:\\Users\\jayant\\Documents\\College\\Labrith\\docs\\evidence\\critic\\artifacts_rejected\\T-05\\audit_report.json"
+    }
+  ],
+  "reasoning": "Audit failed accessibility or quality gate. Emitted 1 revision request(s) targeting ['designer'].",
+  "timestamp": "2026-10-14T05:34:14.141825+00:00"
+}
