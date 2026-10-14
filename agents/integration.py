@@ -429,6 +429,7 @@ def run_integration(
     mock_server: Optional[MockServer] = None,
     api_base_url: Optional[str] = None,
     deliberate_mismatch: Optional[dict[str, Any]] = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     """LangGraph node for the Integration agent.
 

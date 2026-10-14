@@ -143,10 +143,107 @@ def _call_provider(
 ) -> str:
     """Call the underlying LLM provider.
 
-    This function isolates all provider-specific logic.  In v1 it raises
-    NotImplementedError until a real provider SDK is wired in.
+    Supports Anthropic (Claude), OpenAI (GPT), and Google (Gemini) via HTTP requests.
+    Raises NotImplementedError if no provider key is available in the environment.
     """
+    import httpx
+
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+
+    # 1. Anthropic API
+    if anthropic_key and ("claude" in model.lower() or not (openai_key or gemini_key)):
+        url = "https://api.anthropic.com/v1/messages"
+        headers = {
+            "x-api-key": anthropic_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        }
+        # Format messages for Anthropic
+        anthropic_msgs: list[dict[str, Any]] = []
+        system_prompt: Optional[str] = None
+        for m in messages:
+            role = m.get("role", "user")
+            content = m.get("content", "")
+            if role == "system":
+                system_prompt = str(content)
+            elif role in ("user", "assistant"):
+                anthropic_msgs.append({"role": role, "content": content})
+
+        payload: dict[str, Any] = {
+            "model": model,
+            "messages": anthropic_msgs or [{"role": "user", "content": "Hello"}],
+            "max_tokens": opts.get("max_tokens", 4096),
+        }
+        if system_prompt:
+            payload["system"] = system_prompt
+
+        response = httpx.post(url, headers=headers, json=payload, timeout=float(timeout))
+        response.raise_for_status()
+        data = response.json()
+        content_blocks = data.get("content", [])
+        if content_blocks and "text" in content_blocks[0]:
+            return str(content_blocks[0]["text"])
+        return str(data)
+
+    # 2. OpenAI API
+    if openai_key and ("gpt" in model.lower() or "o1" in model.lower() or not gemini_key):
+        url = "https://api.openai.com/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {openai_key}",
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": model if "gpt" in model.lower() else "gpt-4o",
+            "messages": messages,
+        }
+        response = httpx.post(url, headers=headers, json=payload, timeout=float(timeout))
+        response.raise_for_status()
+        data = response.json()
+        return str(data["choices"][0]["message"]["content"])
+
+    # 3. Gemini API
+    if gemini_key:
+        clean_model = model if "gemini" in model.lower() else "gemini-1.5-pro"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={gemini_key}"
+        headers = {"Content-Type": "application/json"}
+        contents = []
+        for m in messages:
+            role = "user" if m.get("role") in ("user", "system") else "model"
+            content = m.get("content", "")
+            if isinstance(content, list):
+                parts = []
+                for part in content:
+                    if isinstance(part, dict) and part.get("type") == "text":
+                        parts.append({"text": part.get("text", "")})
+                    elif isinstance(part, dict) and part.get("type") == "image":
+                        src = part.get("source", {})
+                        if src.get("type") == "base64":
+                            parts.append({
+                                "inline_data": {
+                                    "mime_type": src.get("media_type", "image/png"),
+                                    "data": src.get("data", ""),
+                                }
+                            })
+                contents.append({"role": role, "parts": parts})
+            else:
+                contents.append({"role": role, "parts": [{"text": str(content)}]})
+
+        payload = {"contents": contents}
+        response = httpx.post(url, headers=headers, json=payload, timeout=float(timeout))
+        response.raise_for_status()
+        data = response.json()
+        candidates = data.get("candidates", [])
+        if candidates:
+            parts = candidates[0].get("content", {}).get("parts", [])
+            if parts and "text" in parts[0]:
+                return str(parts[0]["text"])
+        return str(data)
+
     raise NotImplementedError(
         f"No LLM provider configured for model '{model}'. "
-        "Set a fake handler for testing or implement _call_provider()."
+        "Set ANTHROPIC_API_KEY, OPENAI_API_KEY, or GEMINI_API_KEY in .env, "
+        "or set a fake handler for testing."
     )
+

@@ -181,6 +181,8 @@ def run_qa(
     if app_dir is None:
         if sandbox is not None:
             app_dir = sandbox.app_dir
+        elif state.code_artifacts and "app_dir" in state.code_artifacts:
+            app_dir = Path(state.code_artifacts["app_dir"])
         else:
             run_id = getattr(trace_writer, "run_id", "run-default") if trace_writer else "run-default"
             default_app = Path("runs") / run_id / "app"

@@ -582,6 +582,7 @@ def run_designer(
     artifact_dir: Path = Path("artifacts"),
     screenshot_path: Optional[Union[str, Path]] = None,
     findings: Optional[list[Any]] = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     """LangGraph node for the Design Architect agent.
 
