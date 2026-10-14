@@ -1,0 +1,40 @@
+{
+  "run_id": "run-9146c791",
+  "status": "accepted",
+  "iterations": {
+    "total": 6,
+    "by_agent": {
+      "planner": 1,
+      "designer": 1,
+      "engineer": 1,
+      "integration": 1,
+      "qa": 1,
+      "critic": 1
+    }
+  },
+  "gates": {
+    "build": {
+      "passed": true,
+      "evidence": "C:\\Users\\jayant\\Documents\\College\\Labrith\\runs\\run-9146c791\\artifacts\\run-9146c791\\T-02_build.log"
+    },
+    "tests": {
+      "passed": true,
+      "flows_passed": 1,
+      "flows_total": 1
+    },
+    "accessibility": {
+      "passed": true,
+      "critical": 0,
+      "serious": 0
+    },
+    "quality": {
+      "lighthouse_accessibility": 92.0,
+      "lighthouse_performance": 98.0
+    },
+    "integration": {
+      "passed": true,
+      "documented_mismatches": 0
+    }
+  },
+  "unresolved": []
+}
