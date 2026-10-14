@@ -52,6 +52,18 @@ class TestSandboxBasics:
         with pytest.raises(FileNotFoundError):
             test_sandbox.read_file("src/NonExistent.tsx")
 
+    def test_reinstantiation_preserves_components(self, test_sandbox: Sandbox):
+        test_sandbox.write_file("src/components/Header.tsx", "export const Header = () => <header />;")
+        # Reinstantiate sandbox with identical run_id
+        reloaded = Sandbox(
+            run_id=test_sandbox.run_id,
+            base_dir=test_sandbox.base_dir,
+            template_dir=test_sandbox.template_dir,
+            artifact_dir=test_sandbox.artifact_dir.parent,
+        )
+        assert (reloaded.app_dir / "src" / "components" / "Header.tsx").exists()
+        assert reloaded.read_file("src/components/Header.tsx") == "export const Header = () => <header />;"
+
 
 class TestPathEscape:
     def test_relative_escape_write(self, test_sandbox: Sandbox):

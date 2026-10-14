@@ -196,6 +196,15 @@ def _execute_run_worker(
             record.status = final_state.status
     except Exception as exc:
         logger.exception("Run %s failed with error: %s", record.run_id, exc)
+        try:
+            if trace_writer:
+                trace_writer.write(
+                    "planner",
+                    "run_failed",
+                    {"error": str(exc)},
+                )
+        except Exception:
+            pass
         with RUNS_LOCK:
             record.status = "failed"
             record.error = str(exc)

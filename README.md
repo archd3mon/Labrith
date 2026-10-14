@@ -1,4 +1,4 @@
-# FrontForge (Labrith)
+ # FrontForge (Labrith)
 
 FrontForge is a multi-agent system (LangGraph, Python) that acts as a collaborative frontend engineering team. Given a product brief and an OpenAPI spec, it plans, designs, builds, integrates, tests, and reviews a React + TypeScript + Tailwind web application and delivers it with a verified quality report.
 

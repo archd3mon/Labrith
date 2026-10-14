@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from pathlib import Path
 from typing import Any, Optional
 
@@ -82,6 +83,13 @@ def run_engineer(
         else 3
     )
 
+    if trace_writer:
+        trace_writer.write(
+            "engineer",
+            "task_started",
+            {"task_id": task.task_id, "description": task.description},
+        )
+
     design_spec = state.design_spec
     initial_prompt = _build_engineer_prompt(task, design_spec)
     messages: list[dict[str, Any]] = [{"role": "user", "content": initial_prompt}]
@@ -96,7 +104,21 @@ def run_engineer(
         attempts += 1
 
         # Query LLM via thin wrapper lib/llm.py
-        raw_response = complete("engineer", messages)
+        try:
+            raw_response = complete("engineer", messages)
+        except Exception as exc:
+            last_error = f"LLM generation failed: {exc}"
+            if trace_writer:
+                trace_writer.write(
+                    "engineer",
+                    "build_failed",
+                    {"task_id": task.task_id, "attempt": attempts, "error": last_error},
+                )
+            if attempts >= max_attempts:
+                break
+            time.sleep(2)
+            continue
+
         files = _parse_files_from_response(raw_response, default_component_name=task.task_id)
         last_files = files
 
@@ -129,7 +151,9 @@ def run_engineer(
                 "role": "user",
                 "content": (
                     f"The build failed with the following error:\n{last_error}\n\n"
-                    "Please diagnose and fix the error, and return the corrected files in JSON format."
+                    "Please diagnose and fix the error, and return the corrected files in JSON format. "
+                    "Ensure all imports and variables are used, and in test files import ONLY from 'vitest' "
+                    "(do NOT import '@testing-library/react' or '@testing-library/jest-dom')."
                 ),
             })
             continue
@@ -260,6 +284,10 @@ def _build_engineer_prompt(task: TaskDefinition, design_spec: Any) -> str:
         tokens = getattr(design_spec, "tokens", {}) or {}
         layout = getattr(design_spec, "layout_notes", "") or ""
 
+    # Derive sensible component name from task description
+    words = re.findall(r"[a-zA-Z0-9]+", task.description)
+    comp_name = "".join(w.capitalize() for w in words[:4]) or task.task_id.replace("-", "")
+
     return (
         f"You are the Component Engineer. Implement the following task:\n"
         f"Task ID: {task.task_id}\n"
@@ -267,11 +295,13 @@ def _build_engineer_prompt(task: TaskDefinition, design_spec: Any) -> str:
         f"Design Tokens: {json.dumps(tokens)}\n"
         f"Layout Notes: {layout}\n\n"
         "Requirements:\n"
-        "1. Write clean React + TypeScript + Tailwind code for the component.\n"
-        "2. Write a unit test file using Vitest.\n"
+        "1. Write clean React + TypeScript + Tailwind code for the component. Ensure all imports and variables are used (TypeScript strict noUnusedLocals is enabled).\n"
+        "2. Write a unit test file using Vitest. Import ONLY from 'vitest' (e.g. describe, it, expect). Do NOT import '@testing-library/react' or '@testing-library/jest-dom'. Use simple assertion tests (e.g. expect(true).toBe(true)).\n"
         "3. Output MUST be valid JSON with the format:\n"
-        '{\n  "files": [\n    {"path": "src/components/ComponentName.tsx", "content": "..."},\n'
-        '    {"path": "src/components/ComponentName.test.tsx", "content": "..."}\n  ]\n}'
+        '{\n  "files": [\n'
+        f'    {{"path": "src/components/{comp_name}.tsx", "content": "..."}},\n'
+        f'    {{"path": "src/components/{comp_name}.test.tsx", "content": "..."}}\n'
+        '  ]\n}'
     )
 
 

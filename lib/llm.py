@@ -196,22 +196,7 @@ def _call_provider(
         or "gpt-oss" in model.lower()
         or not (anthropic_key or openai_key or gemini_key)
     ):
-        url = "https://api.groq.com/openai/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {groq_key}",
-            "Content-Type": "application/json",
-        }
-        clean_model = model.removeprefix("groq/") if model.startswith("groq/") else model
-        if not clean_model or clean_model == "default" or "claude" in clean_model:
-            clean_model = "qwen/qwen3.8-27b"
-        payload = {
-            "model": clean_model,
-            "messages": messages,
-        }
-        response = httpx.post(url, headers=headers, json=payload, timeout=float(timeout))
-        response.raise_for_status()
-        data = response.json()
-        return str(data["choices"][0]["message"]["content"])
+        return _call_groq(model, messages, groq_key, timeout)
 
     # 3. OpenAI API
     if openai_key and ("gpt" in model.lower() or "o1" in model.lower() or not (gemini_key or groq_key)):
@@ -231,35 +216,87 @@ def _call_provider(
 
     # 4. Gemini API
     if gemini_key:
-        clean_model = model if "gemini" in model.lower() else "gemini-flash-lite-latest"
-        # Map retired/unavailable models to active latest versions
-        if clean_model in ("gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"):
-            clean_model = "gemini-flash-lite-latest"
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={gemini_key}"
-        headers = {"Content-Type": "application/json"}
-        contents = []
-        for m in messages:
-            role = "user" if m.get("role") in ("user", "system") else "model"
-            content = m.get("content", "")
-            if isinstance(content, list):
-                parts = []
-                for part in content:
-                    if isinstance(part, dict) and part.get("type") == "text":
-                        parts.append({"text": part.get("text", "")})
-                    elif isinstance(part, dict) and part.get("type") == "image":
-                        src = part.get("source", {})
-                        if src.get("type") == "base64":
-                            parts.append({
-                                "inline_data": {
-                                    "mime_type": src.get("media_type", "image/png"),
-                                    "data": src.get("data", ""),
-                                }
-                            })
-                contents.append({"role": role, "parts": parts})
-            else:
-                contents.append({"role": role, "parts": [{"text": str(content)}]})
+        return _call_gemini(model, messages, gemini_key, timeout)
 
-        payload = {"contents": contents}
+    raise NotImplementedError(
+        f"No LLM provider configured for model '{model}'. "
+        "Set ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, or GROQ_API_KEY in .env, "
+        "or set a fake handler for testing."
+    )
+
+
+def _call_groq(
+    model: str,
+    messages: list[dict[str, Any]],
+    groq_key: str,
+    timeout: int,
+) -> str:
+    """Helper to execute calls against Groq API."""
+    import httpx
+
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {groq_key}",
+        "Content-Type": "application/json",
+    }
+    clean_model = model.removeprefix("groq/") if model.startswith("groq/") else model
+    if not clean_model or clean_model == "default" or "claude" in clean_model:
+        clean_model = "qwen/qwen3.8-27b"
+    payload = {
+        "model": clean_model,
+        "messages": messages,
+    }
+    try:
+        response = httpx.post(url, headers=headers, json=payload, timeout=float(timeout))
+        response.raise_for_status()
+        data = response.json()
+        return str(data["choices"][0]["message"]["content"])
+    except httpx.HTTPStatusError as err:
+        gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if err.response.status_code == 429 and gemini_key:
+            return _call_gemini("gemini-flash-lite-latest", messages, gemini_key, timeout)
+        raise
+
+
+def _call_gemini(
+    model: str,
+    messages: list[dict[str, Any]],
+    gemini_key: str,
+    timeout: int,
+) -> str:
+    """Helper to execute calls against Google Gemini API."""
+    import httpx
+
+    clean_model = model if "gemini" in model.lower() else "gemini-flash-lite-latest"
+    if clean_model in ("gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"):
+        clean_model = "gemini-flash-lite-latest"
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={gemini_key}"
+    headers = {"Content-Type": "application/json"}
+    contents = []
+    for m in messages:
+        role = "user" if m.get("role") in ("user", "system") else "model"
+        content = m.get("content", "")
+        if isinstance(content, list):
+            parts = []
+            for part in content:
+                if isinstance(part, dict) and part.get("type") == "text":
+                    parts.append({"text": part.get("text", "")})
+                elif isinstance(part, dict) and part.get("type") == "image":
+                    src = part.get("source", {})
+                    if src.get("type") == "base64":
+                        parts.append({
+                            "inline_data": {
+                                "mime_type": src.get("media_type", "image/png"),
+                                "data": src.get("data", ""),
+                            }
+                        })
+            contents.append({"role": role, "parts": parts})
+        else:
+            contents.append({"role": role, "parts": [{"text": str(content)}]})
+
+    payload = {"contents": contents}
+    try:
         response = httpx.post(url, headers=headers, json=payload, timeout=float(timeout))
         response.raise_for_status()
         data = response.json()
@@ -269,10 +306,9 @@ def _call_provider(
             if parts and "text" in parts[0]:
                 return str(parts[0]["text"])
         return str(data)
-
-    raise NotImplementedError(
-        f"No LLM provider configured for model '{model}'. "
-        "Set ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, or GROQ_API_KEY in .env, "
-        "or set a fake handler for testing."
-    )
+    except httpx.HTTPStatusError as err:
+        groq_key = os.getenv("GROQ_API_KEY")
+        if err.response.status_code == 429 and groq_key:
+            return _call_groq("qwen/qwen3.8-27b", messages, groq_key, timeout)
+        raise
 

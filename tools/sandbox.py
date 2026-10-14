@@ -69,10 +69,11 @@ class Sandbox:
         self.app_dir.mkdir(parents=True, exist_ok=True)
         self.artifact_dir.mkdir(parents=True, exist_ok=True)
 
-        # Remove leftover generated components from prior runs if re-using run_id
-        components_dir = self.app_dir / "src" / "components"
-        if components_dir.exists():
-            shutil.rmtree(components_dir, ignore_errors=True)
+        # Remove leftover generated components only on fresh scaffold
+        if not (self.app_dir / "package.json").exists():
+            components_dir = self.app_dir / "src" / "components"
+            if components_dir.exists():
+                shutil.rmtree(components_dir, ignore_errors=True)
 
         if not self.template_dir.exists():
             return

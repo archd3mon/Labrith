@@ -137,6 +137,34 @@ class TestCompleteErrors:
                 assert "api.groq.com" in mock_post.call_args.args[0]
                 assert call_kwargs["json"]["model"] == "qwen/qwen3.8-27b"
 
+    def test_gemini_fallback_to_groq_on_429(self):
+        """Verify Gemini API falling back to Groq on 429 status code."""
+        import httpx
+
+        mock_err_resp = mock.MagicMock(spec=httpx.Response)
+        mock_err_resp.status_code = 429
+        rate_limit_err = httpx.HTTPStatusError("429 Too Many Requests", request=mock.MagicMock(), response=mock_err_resp)
+
+        groq_success_resp = mock.MagicMock()
+        groq_success_resp.status_code = 200
+        groq_success_resp.json.return_value = {
+            "choices": [{"message": {"content": "fallback groq content"}}]
+        }
+
+        # First call (gemini) raises 429, second call (groq) returns 200
+        with mock.patch.dict(os.environ, {"GEMINI_API_KEY": "test_gemini_key", "GROQ_API_KEY": "test_groq_key"}, clear=False):
+            with mock.patch("httpx.post", side_effect=[rate_limit_err, groq_success_resp]) as mock_post:
+                result = complete(
+                    "planner",
+                    [{"role": "user", "content": "hi"}],
+                    model="gemini-flash-lite-latest",
+                    max_retries=1,
+                )
+                assert result == "fallback groq content"
+                assert mock_post.call_count == 2
+                assert "googleapis.com" in mock_post.call_args_list[0].args[0]
+                assert "api.groq.com" in mock_post.call_args_list[1].args[0]
+
 
 # ===========================================================================
 # Retry mechanics
