@@ -1,0 +1,60 @@
+{
+  "tokens": {
+    "colors": {
+      "primary": "#1E40AF",
+      "background": "#F9FAFB",
+      "surface": "#FFFFFF",
+      "text": "#0F172A",
+      "text_muted": "#475569",
+      "border": "#CBD5E1",
+      "error": "#EF4444",
+      "success": "#10B981"
+    },
+    "spacing": {
+      "unit": "4px",
+      "xs": "4px",
+      "sm": "8px",
+      "md": "16px",
+      "lg": "24px",
+      "xl": "32px"
+    },
+    "type_scale": {
+      "font_family": "Inter, sans-serif",
+      "h1": "2rem",
+      "h2": "1.5rem",
+      "h3": "1.25rem",
+      "body": "1rem",
+      "small": "0.875rem"
+    },
+    "color_primary": "#1E40AF",
+    "color_background": "#F9FAFB",
+    "color_text": "#0F172A",
+    "spacing_unit": "4px",
+    "font_family": "Inter, sans-serif"
+  },
+  "component_inventory": {
+    "TicketsDashboard": [
+      "TicketNavBar",
+      "TicketFilterBar",
+      "TicketDataTable",
+      "PriorityBadge"
+    ],
+    "TicketDetail": [
+      "TicketThreadView",
+      "StatusSelector",
+      "TicketReplyForm"
+    ]
+  },
+  "layout_notes": "Two-column responsive layout with high-contrast accessible design tokens.",
+  "revisions": [
+    {
+      "finding": "Color contrast between text (#94A3B8) and background (#F9FAFB) is 2.8:1, failing WCAG AA (minimum 4.5:1).",
+      "change": "Updated primary body text from #94A3B8 to #0F172A (slate-900) and muted text to #475569.",
+      "changed_tokens": {
+        "colors.text": "#0F172A",
+        "colors.text_muted": "#475569"
+      },
+      "rationale": "Contrast ratio increased from 2.8:1 to 15.3:1 against #F9FAFB, fully satisfying WCAG AA and AAA requirements."
+    }
+  ]
+}

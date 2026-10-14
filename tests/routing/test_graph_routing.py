@@ -78,6 +78,22 @@ def make_scripted_llm(responses: list[str]):
     queue = list(responses)
 
     def handler(agent_name: str, messages: list[dict], **kwargs) -> str:
+        if agent_name == "designer":
+            return json.dumps({
+                "tokens": {
+                    "colors": {
+                        "primary": "#1E40AF",
+                        "background": "#F9FAFB",
+                        "text": "#111827",
+                    },
+                    "spacing": {"unit": "4px"},
+                    "type_scale": {"font_family": "Inter, sans-serif"},
+                },
+                "component_inventory": {
+                    "Dashboard": ["TicketList"],
+                },
+                "layout_notes": "Standard layout",
+            })
         if agent_name == "engineer":
             return json.dumps({
                 "files": [
