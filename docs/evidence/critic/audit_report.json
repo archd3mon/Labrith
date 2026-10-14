@@ -1,0 +1,24 @@
+{
+  "status": "accepted",
+  "gates": {
+    "accessibility": {
+      "passed": true,
+      "critical": 0,
+      "serious": 0
+    },
+    "quality": {
+      "passed": true,
+      "lighthouse_accessibility": 97.0,
+      "lighthouse_performance": 89.0
+    }
+  },
+  "axe_violations": [],
+  "lighthouse_scores": {
+    "accessibility": 97.0,
+    "performance": 89.0,
+    "best_practices": 100.0,
+    "seo": 100.0
+  },
+  "revision_requests": [],
+  "accepted": true
+}
