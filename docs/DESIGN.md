@@ -97,6 +97,8 @@ This is what separates Labrith from a workflow. In each scenario below, the next
 4. **Quality gate:** Lighthouse performance and accessibility above the configured threshold (Critic evidence: scores).
 5. **Integration gate:** every API call in the generated client matches the spec, or each mismatch is documented (Integration evidence: mismatch report).
 
+**Gate implementation.** The five gates are evaluated by `graph/gates.py` at the end of each run. The `run_graph()` function in `graph/graph.py` calls `evaluate_gates()` to check all five gates, determines the final status (`accepted` or `partial`), and writes `quality_report.json` validated against `schemas/output.schema.json`. The trace is written by `lib/trace.py` throughout execution, producing `trace.jsonl` with entries from all participating agents.
+
 **Tests as a product requirement.** The Engineer must generate unit tests alongside each component, and the QA Agent must generate end-to-end flows from the Planner's user-flow list. A task with no tests is rejected by the Planner.
 
 **Trace integrity.** All agent messages, routing decisions and proof-of-work records are written to an append-only trace file by the system itself, never by hand. The captured demo trace is submitted unedited.
