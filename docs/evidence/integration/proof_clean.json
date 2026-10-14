@@ -1,0 +1,21 @@
+{
+  "agent": "integration",
+  "task_id": "T-03",
+  "claim": "API client generated; all 3 endpoints matched OpenAPI spec; zero mismatches.",
+  "evidence": [
+    {
+      "type": "api_client",
+      "ref": "docs/evidence/integration/api_client.ts"
+    },
+    {
+      "type": "request_log",
+      "ref": "docs/evidence/integration/requests_matching.log"
+    },
+    {
+      "type": "mismatch_report",
+      "ref": "docs/evidence/integration/mismatch_report_clean.json"
+    }
+  ],
+  "reasoning": "Successfully exercised 3 API endpoints against the server. All responses match schema types, required properties, and enums. Integration gate passed.",
+  "timestamp": "2026-10-14T07:59:16.847400+00:00"
+}

@@ -1,0 +1,8 @@
+{
+  "total_endpoints_tested": 3,
+  "mismatches_count": 0,
+  "passed": true,
+  "planner_action": null,
+  "mismatches": [],
+  "reasoning": "Successfully exercised 3 API endpoints against the server. All responses match schema types, required properties, and enums. Integration gate passed."
+}

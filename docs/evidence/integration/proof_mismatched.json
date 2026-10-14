@@ -1,0 +1,21 @@
+{
+  "agent": "integration",
+  "task_id": "T-03",
+  "claim": "Spec mismatch detected: missing required property 'status'; requesting planner to involve engineer.",
+  "evidence": [
+    {
+      "type": "api_client",
+      "ref": "docs/evidence/integration/api_client.ts"
+    },
+    {
+      "type": "request_log",
+      "ref": "docs/evidence/integration/requests_mismatched.log"
+    },
+    {
+      "type": "mismatch_report",
+      "ref": "docs/evidence/integration/mismatch_report_mismatched.json"
+    }
+  ],
+  "reasoning": "The backend API omits the required 'status' property in tickets list. Component Engineer must update TicketCard presentation and fallback error boundary.",
+  "timestamp": "2026-10-14T07:59:17.414664+00:00"
+}
