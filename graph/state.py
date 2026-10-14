@@ -81,6 +81,12 @@ class IntegrationReport(BaseModel):
     mismatches: list[dict[str, Any]] = Field(
         default_factory=list, description="Spec mismatches found."
     )
+    planner_action: Optional[str] = Field(
+        default=None, description="Action requested from planner: adapt_types | involve_engineer."
+    )
+    passed: Optional[bool] = Field(
+        default=None, description="Whether all endpoint calls matched spec or are documented."
+    )
 
 
 class QAResults(BaseModel):

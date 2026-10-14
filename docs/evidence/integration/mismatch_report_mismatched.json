@@ -1,0 +1,30 @@
+{
+  "total_endpoints_tested": 3,
+  "mismatches_count": 3,
+  "passed": false,
+  "planner_action": "involve_engineer",
+  "mismatches": [
+    {
+      "issue_type": "missing_required_property",
+      "field": "GET /api/tickets[0].status",
+      "expected": "required property 'status'",
+      "actual": "missing",
+      "message": "Missing required property 'status' at 'GET /api/tickets[0].status'"
+    },
+    {
+      "issue_type": "missing_required_property",
+      "field": "GET /api/tickets[1].status",
+      "expected": "required property 'status'",
+      "actual": "missing",
+      "message": "Missing required property 'status' at 'GET /api/tickets[1].status'"
+    },
+    {
+      "issue_type": "missing_required_property",
+      "field": "GET /api/tickets[2].status",
+      "expected": "required property 'status'",
+      "actual": "missing",
+      "message": "Missing required property 'status' at 'GET /api/tickets[2].status'"
+    }
+  ],
+  "reasoning": "The backend API omits the required 'status' property in tickets list. Component Engineer must update TicketCard presentation and fallback error boundary."
+}

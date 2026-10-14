@@ -344,6 +344,12 @@ def _build_decision_prompt(state: GraphState) -> str:
         qa_passed = all(f.get("status") == "pass" for f in state.qa_results.flows)
     critic_accepted = state.audit_report.accepted if state.audit_report else False
 
+    integration_mismatches_count = 0
+    integration_action_requested = None
+    if state.integration_report:
+        integration_mismatches_count = len(state.integration_report.mismatches)
+        integration_action_requested = state.integration_report.planner_action
+
     context = {
         "instruction": (
             "You are the Supervisor Planner. Analyze the blackboard state and choose the NEXT agent to invoke. "
@@ -357,6 +363,8 @@ def _build_decision_prompt(state: GraphState) -> str:
         "accepted_proofs": accepted_proofs,
         "qa_flows_passed": qa_passed,
         "critic_accepted": critic_accepted,
+        "integration_mismatches_count": integration_mismatches_count,
+        "integration_action_requested": integration_action_requested,
         "unresolved_issues": [u.issue for u in state.unresolved],
     }
     return json.dumps(context, indent=2)

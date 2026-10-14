@@ -202,7 +202,7 @@ There are two layers of tests: tests of Labrith itself (graded under Code Review
 labrith/
   agents/        planner.py, designer.py, engineer.py, integration.py, qa.py, critic.py
   graph/         state.py, routing.py, graph.py (LangGraph definition)
-  tools/         sandbox.py, openapi.py, playwright_runner.py, axe_runner.py, lighthouse_runner.py
+  tools/         sandbox.py, openapi.py, mock_server.py, playwright_runner.py, axe_runner.py, lighthouse_runner.py
   lib/           llm.py (model wrapper), proofs.py (proof-of-work records), trace.py
   schemas/       input.schema.json, output.schema.json, proof.schema.json
   api/           FastAPI app
