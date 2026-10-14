@@ -1,0 +1,13 @@
+{
+  "brief": "A support dashboard where agents view open tickets, filter by priority, open a ticket to read its history, and reply.",
+  "api_spec_url": "https://demo-backend.example.com/openapi.json",
+  "target": "dashboard",
+  "style_hints": ["minimal", "data-dense"],
+  "required_flows": [
+    "list tickets",
+    "filter by priority",
+    "open ticket detail",
+    "send reply"
+  ],
+  "max_iterations": 3
+}

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://labrith.example.com/schemas/output.schema.json",
+  "title": "Labrith Quality Report",
+  "description": "Output quality report from a Labrith run. See Design Doc Section 9.",
+  "type": "object",
+  "required": ["run_id", "status", "iterations", "gates", "unresolved"],
+  "properties": {
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for this run."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["accepted", "partial", "failed"],
+      "description": "Final status of the run."
+    },
+    "iterations": {
+      "type": "object",
+      "required": ["total", "by_agent"],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total iterations across all agents."
+        },
+        "by_agent": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "description": "Iteration count keyed by agent name."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Iteration statistics."
+    },
+    "gates": {
+      "type": "object",
+      "required": ["build", "tests", "accessibility", "quality", "integration"],
+      "properties": {
+        "build": {
+          "type": "object",
+          "required": ["passed"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "evidence": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "tests": {
+          "type": "object",
+          "required": ["passed"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "flows_passed": { "type": "integer", "minimum": 0 },
+            "flows_total": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "accessibility": {
+          "type": "object",
+          "required": ["passed"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "critical": { "type": "integer", "minimum": 0 },
+            "serious": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        },
+        "quality": {
+          "type": "object",
+          "properties": {
+            "lighthouse_accessibility": { "type": "number", "minimum": 0, "maximum": 100 },
+            "lighthouse_performance": { "type": "number", "minimum": 0, "maximum": 100 }
+          },
+          "additionalProperties": false
+        },
+        "integration": {
+          "type": "object",
+          "required": ["passed"],
+          "properties": {
+            "passed": { "type": "boolean" },
+            "documented_mismatches": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "description": "Verification gate results. See Design Doc Section 6."
+    },
+    "revisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["by", "to", "reason", "resolved"],
+        "properties": {
+          "by": { "type": "string" },
+          "to": { "type": "string" },
+          "reason": { "type": "string" },
+          "resolved": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      },
+      "description": "Revision requests between agents."
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["issue", "evidence"],
+        "properties": {
+          "issue": {
+            "type": "string",
+            "description": "Description of the unresolved issue."
+          },
+          "evidence": {
+            "type": "string",
+            "description": "Path or reference to evidence for the issue."
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "Issues that remain unresolved at the end of the run."
+    },
+    "preview_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "HTTPS URL of the deployed generated app."
+    }
+  },
+  "additionalProperties": false
+}
