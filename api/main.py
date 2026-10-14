@@ -179,20 +179,30 @@ def _execute_run_worker(
             report_path=record.report_path,
         )
 
-        record.status = final_state.status
+        report_data = None
         if record.report_path.exists():
             try:
-                record.report = json.loads(record.report_path.read_text(encoding="utf-8"))
-                record.preview_url = record.report.get("preview_url")
+                report_data = json.loads(record.report_path.read_text(encoding="utf-8"))
             except Exception as e:
                 logger.warning("Failed to parse quality_report.json: %s", e)
+
+        if report_data is None:
+            from graph.gates import generate_quality_report
+            report_data = generate_quality_report(final_state, run_id=record.run_id)
+
+        with RUNS_LOCK:
+            record.report = report_data
+            record.preview_url = report_data.get("preview_url") if isinstance(report_data, dict) else None
+            record.status = final_state.status
     except Exception as exc:
         logger.exception("Run %s failed with error: %s", record.run_id, exc)
-        record.status = "failed"
-        record.error = str(exc)
+        with RUNS_LOCK:
+            record.status = "failed"
+            record.error = str(exc)
     finally:
-        record.is_terminal = True
-        record.completed_at = datetime.now(timezone.utc).isoformat()
+        with RUNS_LOCK:
+            record.is_terminal = True
+            record.completed_at = datetime.now(timezone.utc).isoformat()
 
 
 # ---------------------------------------------------------------------------

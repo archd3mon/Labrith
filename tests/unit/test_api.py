@@ -204,7 +204,9 @@ class TestAPIRunLifecycle:
             get_resp = client.get(f"/runs/{run_id}")
             assert get_resp.status_code == 200
             record_data = get_resp.json()
-            if record_data["status"] in ("accepted", "partial", "failed"):
+            if record_data["status"] in ("accepted", "partial", "failed") and (
+                record_data["status"] == "failed" or record_data.get("report") is not None
+            ):
                 break
             time.sleep(0.5)
 

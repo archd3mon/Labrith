@@ -147,7 +147,14 @@ The system accepts one JSON request describing what to build and where the backe
 }
 ```
 
-**Validation.** Requests are validated against a JSON Schema before any agent runs. A missing or unreachable spec, or an unsupported `target`, returns a clear error and no agent is started (this is part of the robustness behaviour shown in the live demo).
+**Validation and API endpoints.** The backend is served via FastAPI (`api/main.py`), exposing the following endpoints:
+
+- `POST /runs`: Synchronously validates the payload against `schemas/input.schema.json` and verifies that the OpenAPI specification (`api_spec_url`) is reachable and structurally valid. Invalid schema or unparseable/unreachable specs return HTTP 422 or 400 immediately without starting any agent. Valid requests return HTTP 201 with `{"run_id": "...", "status": "running"}` and launch the multi-agent graph in a background thread.
+- `GET /runs/{run_id}`: Returns the current run state, including `status` (`running`, `accepted`, `partial`, `failed`), timestamps, generated `quality_report.json` upon completion, and preview URL.
+- `GET /runs/{run_id}/events`: Server-Sent Events (SSE) stream delivering real-time trace events directly from `trace.jsonl` as agents execute and transition state.
+- `GET /runs`: Lists all active and past runs.
+- `GET /health`: Health check endpoint.
+- `GET /preview/{run_id}`: Serves the generated Vite/React project artifact.
 
 ## 9. Output definition
 
@@ -222,6 +229,19 @@ labrith/
 - Commits are small, frequent and descriptive, spread across the whole build period.
 - Every member registers their GitHub username on the Artifacts page and commits under their own account.
 - The README covers setup, architecture summary, how to run tests and how to reproduce a demo run.
+
+**Control UI (`web/`).**
+The web control interface is built using React 18, TypeScript, Tailwind CSS, and Vite. It communicates directly with the FastAPI service to orchestrate and visualize runs:
+- `RunForm`: Interactive input builder with instant validation against `schemas/input.schema.json`, preset selectors (e.g., Demo Support Dashboard), and customization options for target, style hints, and iteration budgets.
+- `ActivityFeed`: Subscribes to `/runs/{id}/events` via Server-Sent Events (SSE) to render an append-only timeline of agent messages, tool executions, and routing decisions in real time.
+- `AgentBlackboard`: Supervisor topology display highlighting the active status, current task, iteration counts, and proof-of-work records for each of the six agents.
+- `QualityReportView`: Structured display of the 5 verification gates (Build, Test, Accessibility, Lighthouse Quality, Integration contract) with status badges, score meters, and expandable JSON evidence viewers.
+- `RunHistoryModal`: Side drawer allowing operators to inspect, filter, and reload historical runs from the backend.
+
+**Deployment and Containerization.**
+- **Dockerfile**: Multi-stage container build. Stage 1 compiles the React control UI (`web/dist`) with Node.js 20. Stage 2 provisions a Python 3.11 environment with Node.js, Chromium, Playwright dependencies, and axe-core / Lighthouse audit tools, serving the unified API and frontend bundle through Uvicorn at port 8000.
+- **docker-compose.yml**: Single-command container deployment for local and isolated staging validation (`docker compose up --build`).
+- **render.yaml**: Configuration for zero-downtime PaaS deployment on Render.com web services.
 
 ## 12. Team ownership and evidence checklist
 
