@@ -121,6 +121,14 @@ def make_scripted_llm(responses: list[str]):
                 "required_flows": ["list tickets", "filter by priority"],
                 "reasoning": "Standard graph routing test plan",
             })
+        if agent_name == "qa":
+            return json.dumps({
+                "flow_name": "list tickets",
+                "steps": [
+                    {"action": "goto", "value": "/"},
+                    {"action": "wait", "value": "50"},
+                ],
+            })
         if queue:
             return queue.pop(0)
         return "finish"
