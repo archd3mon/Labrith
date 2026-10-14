@@ -150,9 +150,9 @@ class GraphState(BaseModel):
     )
 
     # --- Iteration tracking ---
-    iteration_counters: dict[str, int] = Field(
+    iteration_counters: dict[str, Any] = Field(
         default_factory=dict,
-        description="Iteration count keyed by task_id or 'run_total'.",
+        description="Iteration count keyed by task_id or 'run_total', plus routing metadata.",
     )
 
     # --- Run status ---
