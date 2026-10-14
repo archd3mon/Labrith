@@ -138,8 +138,12 @@ def run_graph(
     trace_writer: Optional[TraceWriter] = None,
     artifact_dir: Path = Path("artifacts"),
     agent_overrides: Optional[dict[str, dict[str, Any]]] = None,
+    report_path: Optional[Path] = None,
 ) -> GraphState:
     """Create and run the graph for the given request.
+
+    Evaluates the five verification gates upon completion and writes
+    quality_report.json matching schemas/output.schema.json.
 
     Returns:
         The final GraphState after the run completes.
@@ -153,5 +157,26 @@ def run_graph(
     final_state_dict = app.invoke(initial_state)
     # LangGraph returns a dict when the schema is a Pydantic model
     if isinstance(final_state_dict, dict):
-        return GraphState(**final_state_dict)
-    return final_state_dict
+        final_state = GraphState(**final_state_dict)
+    else:
+        final_state = final_state_dict
+
+    # Evaluate the five verification gates
+    from graph.gates import (
+        all_gates_passed,
+        evaluate_gates,
+        generate_quality_report,
+        save_quality_report,
+    )
+
+    gates = evaluate_gates(final_state)
+    if final_state.status not in ("accepted", "partial", "failed"):
+        final_state.status = "accepted" if all_gates_passed(gates) else "partial"
+
+    run_id = getattr(trace_writer, "run_id", "run-default") if trace_writer else "run-default"
+    report = generate_quality_report(final_state, run_id=run_id)
+    out_path = report_path or (artifact_dir / "quality_report.json")
+    save_quality_report(report, out_path)
+
+    return final_state
+

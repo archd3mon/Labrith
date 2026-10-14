@@ -143,6 +143,7 @@ def run_critic(
     vision_enabled: bool = True,
     axe_runner: Optional[AxeRunner] = None,
     lighthouse_runner: Optional[LighthouseRunner] = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     """Execute the Accessibility and Design Critic agent.
 

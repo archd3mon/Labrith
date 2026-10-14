@@ -55,14 +55,14 @@ def run_engineer(
                 {"task_id": task.task_id, "error": "Simulated type error in ComponentA.tsx"},
             )
         updated_plan = _mark_task_status(state, task.task_id, "failed")
+        updated_artifacts = dict(state.code_artifacts)
+        updated_artifacts[task.task_id] = {
+            "status": "failed",
+            "error": "Simulated type error in ComponentA.tsx",
+        }
         return {
             "plan": updated_plan,
-            "code_artifacts": {
-                task.task_id: {
-                    "status": "failed",
-                    "error": "Simulated type error in ComponentA.tsx",
-                }
-            },
+            "code_artifacts": updated_artifacts,
         }
 
     # Initialize sandbox if not provided
@@ -187,17 +187,18 @@ def run_engineer(
             )
 
         updated_plan = _mark_task_status(state, task.task_id, "done")
+        updated_artifacts = dict(state.code_artifacts)
+        updated_artifacts[task.task_id] = {
+            "status": "success",
+            "attempts": attempts,
+            "files": [p for p, _ in last_files],
+            "build_log": build_log_path,
+            "test_log": test_log_path,
+        }
+        updated_artifacts["app_dir"] = str(sandbox.app_dir)
         return {
             "plan": updated_plan,
-            "code_artifacts": {
-                task.task_id: {
-                    "status": "success",
-                    "attempts": attempts,
-                    "files": [p for p, _ in last_files],
-                    "build_log": build_log_path,
-                    "test_log": test_log_path,
-                }
-            },
+            "code_artifacts": updated_artifacts,
             "proofs": state.proofs + [proof],
         }
 
