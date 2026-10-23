@@ -122,14 +122,15 @@ def validate_proof(
             if not ref:
                 errors.append(f"evidence[{i}]: missing or empty 'ref'")
             else:
-                # Check file existence on disk
-                ref_path = Path(ref)
-                if base_dir is not None:
-                    ref_path = base_dir / ref_path
-                if not ref_path.exists():
-                    errors.append(
-                        f"evidence[{i}]: ref '{ref}' does not exist on disk"
-                        + (f" (resolved to {ref_path})" if base_dir else "")
-                    )
+                # Only check file existence for local paths (skip URLs and in-memory refs)
+                if not ref.startswith(("http://", "https://")):
+                    ref_path = Path(ref)
+                    if base_dir is not None:
+                        ref_path = base_dir / ref_path
+                    if not ref_path.exists():
+                        errors.append(
+                            f"evidence[{i}]: ref '{ref}' does not exist on disk"
+                            + (f" (resolved to {ref_path})" if base_dir else "")
+                        )
 
     return (len(errors) == 0, errors)

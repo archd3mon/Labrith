@@ -161,14 +161,7 @@ def evaluate_quality_gate(state: GraphState) -> dict[str, Any]:
     if state.audit_report and state.audit_report.lighthouse_scores:
         lh_acc = float(state.audit_report.lighthouse_scores.get("accessibility", 0.0))
         lh_perf = float(state.audit_report.lighthouse_scores.get("performance", 0.0))
-    else:
-        # Check if critic accepted in proof
-        for proof in state.proofs:
-            agent_str = str(proof.agent.value if hasattr(proof.agent, "value") else proof.agent)
-            if agent_str == "critic" and "accepted" in proof.claim.lower():
-                lh_acc = 95.0
-                lh_perf = 88.0
-                break
+    # If no real audit data exists, leave scores at 0.0 — do not fabricate values.
 
     res: dict[str, Any] = {}
     if lh_acc > 0.0:
@@ -197,10 +190,15 @@ def evaluate_integration_gate(state: GraphState) -> dict[str, Any]:
         else:
             passed = True  # Mismatches documented
     else:
-        # Check Integration proofs
+        # Check Integration proofs — only pass if proof claim indicates success
         for proof in state.proofs:
             agent_str = str(proof.agent.value if hasattr(proof.agent, "value") else proof.agent)
-            if agent_str == "integration":
+            if agent_str == "integration" and (
+                "matched" in proof.claim.lower()
+                or "verified" in proof.claim.lower()
+                or "zero mismatch" in proof.claim.lower()
+                or "passed" in proof.claim.lower()
+            ):
                 passed = True
                 break
 
