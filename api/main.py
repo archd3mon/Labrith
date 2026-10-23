@@ -48,10 +48,13 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Enable CORS for frontend UI
+# Enable CORS for frontend UI.
+# allow_credentials=True is incompatible with allow_origins=["*"] in all
+# browsers (CORS spec §3.2). Use a concrete origin list instead.
+_CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in _CORS_ORIGINS if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -146,6 +149,7 @@ def _execute_run_worker(
     agent_overrides: Optional[dict[str, Any]] = None,
 ) -> None:
     """Executes the multi-agent graph in a background thread."""
+    trace_writer: Optional[TraceWriter] = None
     try:
         # Fall back to scripted multi-agent simulation if no provider keys are set
         has_real_key = bool(
