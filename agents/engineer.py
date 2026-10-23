@@ -235,17 +235,20 @@ def run_engineer(
         )
 
     updated_plan = _mark_task_status(state, task.task_id, "failed")
+    failed_artifacts = dict(state.code_artifacts)
+    failed_artifacts[task.task_id] = {
+        "status": "failed",
+        "attempts": attempts,
+        "error": last_error,
+        "build_log": build_log_path,
+        "test_log": test_log_path,
+    }
+    # Preserve existing app_dir if it was set by a previous successful task
+    if "app_dir" not in failed_artifacts and sandbox is not None:
+        failed_artifacts["app_dir"] = str(sandbox.app_dir)
     return {
         "plan": updated_plan,
-        "code_artifacts": {
-            task.task_id: {
-                "status": "failed",
-                "attempts": attempts,
-                "error": last_error,
-                "build_log": build_log_path,
-                "test_log": test_log_path,
-            }
-        },
+        "code_artifacts": failed_artifacts,
     }
 
 

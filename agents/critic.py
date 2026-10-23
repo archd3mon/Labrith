@@ -451,7 +451,13 @@ def run_critic(
         evidence=[{"type": "audit_report", "ref": str(report_path)}],
         reasoning=reasoning,
     )
-    validate_proof(proof)
+    is_valid, proof_errors = validate_proof(proof)
+    if not is_valid and trace_writer:
+        trace_writer.write(
+            "critic",
+            "proof_validation_failed",
+            {"errors": proof_errors},
+        )
 
     if trace_writer:
         trace_writer.write(
