@@ -33,7 +33,10 @@ _AGENT_MODEL_KEYS: dict[str, str] = {
 }
 
 _DEFAULT_MODEL = "claude-3-5-sonnet-20241022"
-_DEFAULT_TIMEOUT = int(os.getenv("LLM_TIMEOUT_SECONDS", "60"))
+try:
+    _DEFAULT_TIMEOUT = max(1, int(os.getenv("LLM_TIMEOUT_SECONDS", "60") or "60"))
+except ValueError:
+    _DEFAULT_TIMEOUT = 60
 _DEFAULT_MAX_RETRIES = 3
 _RETRY_BACKOFF_BASE = 1.0  # seconds; exponential backoff multiplier
 
@@ -241,7 +244,7 @@ def _call_groq(
     }
     clean_model = model.removeprefix("groq/") if model.startswith("groq/") else model
     if not clean_model or clean_model == "default" or "claude" in clean_model:
-        clean_model = "qwen/qwen3.8-27b"
+        clean_model = "qwen/qwen3-8b"
     payload = {
         "model": clean_model,
         "messages": messages,
@@ -309,6 +312,6 @@ def _call_gemini(
     except httpx.HTTPStatusError as err:
         groq_key = os.getenv("GROQ_API_KEY")
         if err.response.status_code == 429 and groq_key:
-            return _call_groq("qwen/qwen3.8-27b", messages, groq_key, timeout)
+            return _call_groq("qwen/qwen3-8b", messages, groq_key, timeout)
         raise
 
