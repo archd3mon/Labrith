@@ -81,10 +81,12 @@ The system provides a FastAPI service that streams agent activity in real time:
   **Success response (`201`):** `{"run_id": "run-xxxx", "status": "running"}`
 
 - `GET /runs/{run_id}` — Returns the current status (`running`, `accepted`, `partial`, `failed`), preview URL, and full `quality_report.json` upon completion.
-- `GET /runs/{run_id}/events` — Server-Sent Events (SSE) streaming append-only trace entries from `trace.jsonl` in real time, concluding with `event: end`. Each event is a JSON object matching the proof-of-work schema.
-- `GET /runs` — Lists historical runs and their completion statuses.
-- `GET /health` — Health check endpoint (`{"status": "ok"}`).
+- `GET /runs/{run_id}/events` — Server-Sent Events (SSE) streaming append-only trace entries from `trace.jsonl` in real time. Each `trace` event's `data` is one JSONL entry; entries are not necessarily proof-of-work records. The stream concludes with an `end` event containing the run status and final report.
+- `GET /runs` — Lists runs held in the service's in-memory registry and their completion statuses.
+- `GET /api/sample-input` — Returns the sample request used to prefill the Control UI, making it available to API clients as well.
+- `GET /health` — Health check endpoint (`{"status": "ok", "service": "FrontForge API"}`).
 - `GET /` — Serves the React Control UI bundle from `web/dist`.
+- `/docs` and `/redoc` — Interactive Swagger UI and ReDoc API references; `/openapi.json` serves the generated OpenAPI document.
 
 ---
 
@@ -115,9 +117,14 @@ The web workspace contains a production-grade React + TypeScript + Vite + Tailwi
    ```bash
    python -m venv .venv
    # Windows PowerShell:
-   .venv\Scripts\Activate.ps1
+   .\.venv\Scripts\Activate.ps1
    # Linux / macOS:
    source .venv/bin/activate
+   ```
+   If PowerShell blocks activation, allow scripts for the current PowerShell process only, then retry:
+   ```powershell
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+   .\.venv\Scripts\Activate.ps1
    ```
 3. Install Python dependencies:
    ```bash
@@ -125,6 +132,7 @@ The web workspace contains a production-grade React + TypeScript + Vite + Tailwi
    ```
 4. Install Playwright browsers (required for QA agent):
    ```bash
+   pip install playwright
    playwright install chromium
    ```
 5. Build the React Control UI:
@@ -193,7 +201,7 @@ The `tests/fakes.py` module provides a scripted fake LLM for unit and agent test
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `POST /runs` returns `422` | Request body fails JSON schema validation | Check required fields: `brief`, `api_spec_url`, `target` |
+| `POST /runs` returns `400` | Request body is malformed or fails validation | Check required fields: `brief`, `api_spec_url`, `target` |
 | `POST /runs` returns `400` | `api_spec_url` is unreachable or not valid OpenAPI 3 | Verify the URL is reachable and returns a valid spec |
 | `playwright install` fails | Playwright not installed | Run `pip install playwright` then `playwright install chromium` |
 | `npm run build` fails in `web/` | Node modules not installed | Run `npm install` inside `web/` first |
@@ -252,6 +260,8 @@ docker run -p 8000:8000 frontforge
 5. Once completed, navigate to **Quality Report & Preview** to inspect the 5 verification gates and click **Open Live Preview**.
 
 ### Via `curl`:
+The example below uses Bash-style line continuations. In Windows PowerShell, use the native PowerShell example that follows; `curl` there is an alias for `Invoke-WebRequest`.
+
 ```bash
 # 1. Trigger a run
 curl -X POST http://localhost:8000/runs \
@@ -272,6 +282,31 @@ curl http://localhost:8000/runs/run-xxxx
 
 # 3. Stream live trace events
 curl -N http://localhost:8000/runs/run-xxxx/events
+```
+
+### Via PowerShell:
+```powershell
+# 1. Trigger a run
+$body = @{
+  brief = "A support dashboard where agents view open tickets, filter by priority, open a ticket to read its history, and reply."
+  api_spec_url = "https://demo-backend.example.com/openapi.json"
+  target = "dashboard"
+  style_hints = @("minimal", "data-dense")
+  required_flows = @("list tickets", "filter by priority", "open ticket detail", "send reply")
+  max_iterations = 3
+} | ConvertTo-Json -Depth 5
+
+$run = Invoke-RestMethod -Method Post `
+  -Uri "http://localhost:8000/runs" `
+  -ContentType "application/json" `
+  -Body $body
+$run
+
+# 2. Check run status and quality report
+Invoke-RestMethod -Uri "http://localhost:8000/runs/$($run.run_id)"
+
+# 3. Stream live trace events
+curl.exe -N "http://localhost:8000/runs/$($run.run_id)/events"
 ```
 
 ---
